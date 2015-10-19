@@ -1,0 +1,85 @@
+//nome do pacote a ser gerado
+
+//imports de classes utilizadas nos codigos abaixo
+import java_cup.runtime.*;
+import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
+
+//class NomeDaClasse //(pode nomear como desejar a classe)
+
+//aqui se coloca código associado com as ações semânticas da gramática
+//por exemplo, manipulação da tabela de símbolos
+//action code {: :}
+
+//permite a declaração de métodos e variáveis que estarão na classe gerada
+//pode fazer override de métodos de tratamento de erros
+parser code {:
+  protected Lexer lexer;
+:}
+
+/* codigo que vai ser executado antes do parser solicitar primeiro token
+   geralmente utilizado para inicializar o scanner, e as tabelas e estruturas de dados utilizadas pelas ações semânticas
+   o código aqui vai ser o corpo de um método void da classe gerada
+ */
+init with {:
+  ComplexSymbolFactory f = new ComplexSymbolFactory();
+  symbolFactory = f;
+  File file = new File("input.txt");
+  FileInputStream fis = null;
+  try {
+    fis = new FileInputStream(file);
+  } catch (IOException e) {
+    e.printStackTrace();
+  } 
+  lexer = new Lexer(f,fis);
+:};
+
+//indica como o parser solicita o próximo token do scanner
+scan with {: return lexer.next_token(); :};
+
+//termiais
+
+terminal CLASS, ACHAVE, FCHAVE, PUBLIC, STATIC, VOID, MAIN, APARENTESE, ACOLCHETE, FCOLCHETE, FPARENTESE, EXTENDS, PVIRGULA, VIRGULA, RETURN, IF, ELSE, WHILE, IMPRIMIR, IGUAL, E, MENORQ, ADICAO, SUBTRACAO, MULTIPLICACAO, PONTO, TAMANHO, VERDADEIRO, FALSO, THIS, NEW, NOT; 
+
+terminal String STRING;
+
+terminal Integer NUMBER;
+
+terminal Boolean BOOLEANO;
+
+
+//nao terminais
+
+non terminal goal, mainClass, classDeclaration, varDeclaration, methodDeclaration, type, stmt, express, id;
+
+
+//gramatica para o parser
+goal	          ::=	mainClass classDeclaration;
+mainClass	      ::=	CLASS {: System.out.print(" class "); :} id ACHAVE {: System.out.print(" { "); :} PUBLIC {: System.out.print(" public "); :} STATIC {: System.out.print(" static "); :} VOID {: System.out.print(" void "); :} MAIN {: System.out.print(" main "); :} APARENTESE {: System.out.print(" ( "); :} STRING {: System.out.print(" String "); :} ACOLCHETE {: System.out.print(" [ "); :} FCOLCHETE {: System.out.print(" ] "); :} id FPARENTESE {: System.out.print(" ) "); :} ACHAVE {: System.out.print(" { "); :} stmt FCHAVE {: System.out.print(" } "); :} FCHAVE {: System.out.print(" } "); :};
+classDeclaration  ::=	CLASS {: System.out.print(" class "); :} id EXTENDS {: System.out.print(" extends "); :} id ACHAVE {: System.out.print(" { "); :} varDeclaration methodDeclaration FCHAVE {: System.out.print(" } "); :};
+varDeclaration	  ::=	type id PVIRGULA {: System.out.print(" ; "); :};
+methodDeclaration ::=	PUBLIC {: System.out.print(" public "); :} type id APARENTESE {: System.out.print(" ( "); :} type id VIRGULA {: System.out.print(" , "); :} type id FPARENTESE {: System.out.print(" ) "); :} ACHAVE {: System.out.print(" { "); :} varDeclaration stmt RETURN {: System.out.print(" return "); :} express PVIRGULA {: System.out.print(" ; "); :} FCHAVE {: System.out.print(" } "); :};
+type	          ::=	NUMBER {: System.out.print(" int "); :} ACOLCHETE {: System.out.print(" [ "); :} FCOLCHETE {: System.out.print(" ] "); :} |
+                       	BOOLEANO {: System.out.print(" boolean "); :} |
+                       	NUMBER {: System.out.print(" int "); :} |
+                        id;
+stmt	          ::=	ACHAVE {: System.out.print(" { "); :} stmt FCHAVE {: System.out.print(" } "); :} |
+                        IF {: System.out.print(" if "); :} APARENTESE {: System.out.print(" ( "); :} express FPARENTESE {: System.out.print(" ) "); :} stmt ELSE {: System.out.print(" else "); :} stmt |
+                 	    WHILE {: System.out.print(" while "); :} APARENTESE {: System.out.print(" ( "); :} express FPARENTESE {: System.out.print(" ) "); :} stmt |
+                        IMPRIMIR {: System.out.print(" System.out.println "); :} APARENTESE {: System.out.print(" ( "); :} express FPARENTESE {: System.out.print(" ) "); :} PVIRGULA {: System.out.print(" ; "); :} |
+                   	    id IGUAL {: System.out.print(" = "); :} express PVIRGULA {: System.out.print(" ; "); :} |
+                	    id ACOLCHETE {: System.out.print(" [ "); :} express FCOLCHETE {: System.out.print(" ] "); :} IGUAL {: System.out.print(" = "); :} express PVIRGULA {: System.out.print(" ; "); :};
+express           ::=	express E {: System.out.print(" && "); :} | MENORQ {: System.out.print(" < "); :} | ADICAO {: System.out.print(" + "); :} | SUBTRACAO {: System.out.print(" - "); :} | MULTIPLICACAO {: System.out.print(" * "); :} |
+                	    express ACOLCHETE {: System.out.print(" [ "); :} express FCOLCHETE {: System.out.print(" ] "); :} |
+                        express PONTO {: System.out.print(" . "); :} TAMANHO {: System.out.print(" length "); :} |
+                 	    express PONTO {: System.out.print(" . "); :} id {: System.out.print(" ( "); :} express VIRGULA {: System.out.print(" , "); :} express FPARENTESE {: System.out.print(" ) "); :} |
+                        VERDADEIRO {: System.out.print(" true "); :} |
+                        FALSO {: System.out.print(" false "); :} |
+                        id |
+                 	    THIS {: System.out.print(" this "); :} |
+                 	    NEW {: System.out.print(" new "); :} NUMBER {: System.out.print(" int "); :} ACOLCHETE {: System.out.print(" [ "); :} express FCOLCHETE {: System.out.print(" ] "); :} |
+                     	NEW {: System.out.print(" new "); :} id APARENTESE {: System.out.print(" ( "); :} FPARENTESE {: System.out.print(" ) "); :} |
+                    	NOT {: System.out.print(" ! "); :} |
+                     	APARENTESE {: System.out.print(" ( "); :} express FPARENTESE {: System.out.print(" ) "); :};
+id	              ::=	{: System.out.print (" id "); :};
